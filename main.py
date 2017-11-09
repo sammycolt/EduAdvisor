@@ -1,17 +1,14 @@
 import re
-import redis
-import telebot
-import sqlite3
-import csv
-from vk_info import *
-
 from enum import Enum, unique
 
+import redis
+import telebot
 from flask import Flask, request, abort
 
 from model import *
+from vk_info import *
 
-#WEBHOOK_URL_BASE = 'https://bot.shadowservants.ru'
+# WEBHOOK_URL_BASE = 'https://bot.shadowservants.ru'
 WEBHOOK_PATH = '/hook'
 
 TOKEN = '498529639:AAFOt8w_u_7LquJWlyEiPUUfFdxL6R7AIIk'
@@ -21,21 +18,48 @@ app = Flask(__name__)
 bot = telebot.TeleBot(TOKEN, threaded=False)
 
 bot.remove_webhook()
-#bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_PATH, certificate=open('ssl/YOURPUBLIC.pem', 'r'))
+# bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_PATH, certificate=open('ssl/YOURPUBLIC.pem', 'r'))
 
 r = redis.StrictRedis(host='localhost', port=6379, db=0)
-
 
 
 def recommender(klimov, cl1, cl2):
     proffs = [
         [['Product manager', 'IT-recruitment'], ['SMM', 'Тех поддержка']],
-        [['Робототехник', 'Системный инженер'], ['Специалист по информационной безопасности', 'Системный администратор']], 
-        [['Системный архитектор', 'ERP-специалист'], ['Бизнес аналитик', 'QA-инженер']], 
-        [['Data scientist', 'Backend dev'], ['Технический писатель', 'Junior Developer']], 
-        [['UI прототипирование','Frontend dev'], ['3d modelist', 'SEO']]
-        ]
+        [['Робототехник', 'Системный инженер'],
+         ['Специалист по информационной безопасности', 'Системный администратор']],
+        [['Системный архитектор', 'ERP-специалист'], ['Бизнес аналитик', 'QA-инженер']],
+        [['Data scientist', 'Backend dev'], ['Технический писатель', 'Junior Developer']],
+        [['UI прототипирование', 'Frontend dev'], ['3d modelist', 'SEO']]
+    ]
     return proffs[klimov][cl1][cl2]
+
+
+def describe(p):
+    DICT = {
+        'Product manager': "отвечает за создание новых продуктов, их продвижение, аналитику рынка (в частности - конкурентов).",
+        'IT-recruitment': "занимается подбором специалистов на вакансии для работы в сфере информационных технологий.",
+        'SMM': "через социальные сети привлекает внимание к продукту, работает с образом бренда и выполняет другие бизнес-задачи.",
+        'Тех поддержка': "занимается технической поддержкой пользователей ПК и администрированием учетных записей, рабочих станций, периферийного и сетевого оборудования.",
+        'Робототехник': "специалист в разработке роботов и автоматизированных технических систем.",
+        'Системный инженер': "настраивает и обслуживает внутренние компьютерные сети и офисную технику, помогает сотрудникам освоить технику.",
+        'Специалист по информационной безопасности': "принимает непосредственное участие в создании системы защиты  и проверки информации, занимается анализом технологических рисков и их предотвращением.",
+        'Системный администратор': "занимается обслуживанием компьютеров и локальных компьютерных сетей.",
+        'Системный архитектор': "проектирует архитектуру ПО, т. е. принимает ключевые проектные решения относительно внутреннего устройства программной системы и её технических интерфейсов.",
+        'ERP-специалист': "обеспечивает управление ресурсами компании и их планирование.",
+        'Бизнес аналитик': "осуществляет многосторонний анализ бизнес-деятельности участников рынка, составляет рекомендации по развитию бизнеса.",
+        'QA-инженер': "осуществляет функциональное тестирование программного обеспечения на этапе разработки.",
+        'Data scientist': "обладает техническими навыками для решения сложных задач с привлечением методов работы с большими объемами данных; в своей работе руководствуется сплавом математики и компьютерной науки. ",
+        'Backend dev': "несет ответственность за создание серверной части в веб-приложениях - внутреннего содержания системы.",
+        'Технический писатель': "занимается составлением документации в рамках разработки различных программ и автоматизированных систем.",
+        'Junior Developer': " молодой разработчик с малым количеством опыта, обладающий широким арсеналом средств и большими перспективами развития.",
+        'UI прототипирование': "проективрует интерфейсы приложений, руководствуясь внешней привлекательностью и удобством пользования интерфейса.",
+        'Frontend dev': "является наиболее универсальным представителем IT-сферы, в первую очередь ответственным за создание программной основы интерфейсов.",
+        '3d modelist': "переводит реальные объекты на язык виртуальных моделей, либо создает их из своего воображения и требований текущей задачи.",
+        'SEO': "осуществляет оптимизацию сайтов для поисковых алгоритмов, увеличивая их релевантность."
+    }
+    print(p)
+    return p + " " + DICT.get(p)
 
 
 class RedisStorage(object):
@@ -69,6 +93,7 @@ ss = SimpleFuckingStorage()
 def check_email(text):
     return re.match('[^@]+@[^@]+\.[^@]+', text) is not None
 
+
 @unique
 class KlimovCategory(Enum):
     HUMAN = 0
@@ -82,6 +107,7 @@ class KlimovTestVariant(object):
     def __init__(self, text, category: KlimovCategory):
         self.text = text
         self.category = category
+
 
 class KlimovTestQuestion(object):
     def __init__(self, text="Что вы выберете?"):
@@ -114,6 +140,7 @@ with open("klimov_questions.txt", "r") as kq:
         v2 = KlimovTestVariant(question[1], question[3])
         klimov_questions.append(KlimovTestQuestion().add_variant(v1).add_variant(v2))
 
+
 # klimov_questions = []
 
 
@@ -145,7 +172,7 @@ class TestQuestions(object):
     def check_answer(self, message):
         question = self.question_router(message)
         if not question:
-            bot.send_message(message.chat.id,'Что-то пошло не так. Попробуйте снова )')
+            bot.send_message(message.chat.id, 'Что-то пошло не так. Попробуйте снова )')
             return
 
         category = question.check_category(message.text)
@@ -154,7 +181,6 @@ class TestQuestions(object):
         points = int(points) + 1
         self.st.set('chat_{}_{}_points'.format(message.chat.id, str(category)), str(points))
 
-      
         ind = self.st.get('chat_{}_question'.format(message.chat.id)) or '0'
         ind = int(ind) + 1
 
@@ -163,7 +189,6 @@ class TestQuestions(object):
 
 
 tq = TestQuestions(klimov_questions)
-
 
 
 @bot.message_handler(commands=['help', 'start'])
@@ -185,6 +210,7 @@ def send_welcome(message: telebot.types.Message):
 def get_user_data(m: telebot.types.Message):
     try:
         dicter = get_info_by_url(m.text)
+        print(m.text)
         l = predict(dicter)
         cl1 = int(l[0])
         cl2 = int(l[1])
@@ -195,21 +221,25 @@ def get_user_data(m: telebot.types.Message):
             if int(pts) > maxx:
                 maxx = int(pts)
                 maxi = i
-        bot.send_message(m.chat.id, 'Мы считаем, что вам наиболее всего подойдёт профессия {}. Желаем успехов!'.format(recommender(maxi, cl1, cl2)))
+        r = recommender(maxi, cl1, cl2)
+        bot.send_message(m.chat.id,
+                         'Мы считаем, что вам наиболее всего подойдёт профессия {}. {} Желаем успехов!'.format(r,
+                                                                                                                describe(
+                                                                                                                    r)))
     except Exception as e:
         print(e)
         print(m.text)
-        bot.send_message(m.chat.id, 'Извините, произошла ошибка, попробуйте ещё раз чуть-позже. Разработчики уже в курсе. <3')
-    # markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
-    # markup.add(telebot.types.KeyboardButton('Отправить номер телефона', request_contact=True))
-    # nm = bot.send_message(m.chat.id,
-    #                       "Введи свои контактные данные и узнай результат! Нажми на кнопку или введите почту :)",
-    #                       reply_markup=markup)
-    # bot.register_next_step_handler(nm, send_result)
+        bot.send_message(m.chat.id,
+                         'Извините, произошла ошибка, попробуйте ещё раз чуть-позже. Разработчики уже в курсе. <3')
+        # markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
+        # markup.add(telebot.types.KeyboardButton('Отправить номер телефона', request_contact=True))
+        # nm = bot.send_message(m.chat.id,
+        #                       "Введи свои контактные данные и узнай результат! Нажми на кнопку или введите почту :)",
+        #                       reply_markup=markup)
+        # bot.register_next_step_handler(nm, send_result)
 
 
 def send_result(m: telebot.types.Message):
-
     # for i in range(5):
     #     pts = tq.st.get('chat_{}_{}_points'.format(m.chat.id, str(i))) or '0'
     #     bot.send_message(m.chat.id, 'Вы набрали {} очков по категории {}'.format(pts, KlimovCategory(i).name))
@@ -217,7 +247,7 @@ def send_result(m: telebot.types.Message):
     # markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
     # markup.add(telebot.types.KeyboardButton('Осталось указать профиль vk'))
     nm = bot.send_message(m.chat.id,
-                          "Остадось указать профиль vk. Введи его")
+                          "Осталось указать профиль vk. Введи его")
     bot.register_next_step_handler(nm, get_user_data)
 
 
@@ -235,5 +265,6 @@ def hook():
         return ''
     else:
         return abort(403)
+
 
 bot.polling()

@@ -208,28 +208,29 @@ def send_welcome(message: telebot.types.Message):
 
 
 def get_user_data(m: telebot.types.Message):
+    global dicter
     try:
         try:
             dicter = get_info_by_url(m.text)
+            print(m.text)
+            l = predict(dicter)
+            cl1 = int(l[0])
+            cl2 = int(l[1])
+            maxx = -1
+            maxi = -1
+            for i in range(5):
+                pts = tq.st.get('chat_{}_{}_points'.format(m.chat.id, str(i))) or '0'
+                if int(pts) > maxx:
+                    maxx = int(pts)
+                    maxi = i
+            r = recommender(maxi, cl1, cl2)
+            bot.send_message(m.chat.id,
+                             'Мы считаем, что вам наиболее всего подойдёт профессия {}. {} Желаем успехов!'.
+                             format(r, describe(r)))
         except Exception as e:
             msg = bot.send_message(m.chat.id, 'Ошибка при распознавании профиля VK. Попробуйте ещё раз')
             bot.register_next_step_handler(msg, get_user_data)
-        print(m.text)
-        l = predict(dicter)
-        cl1 = int(l[0])
-        cl2 = int(l[1])
-        maxx = -1
-        maxi = -1
-        for i in range(5):
-            pts = tq.st.get('chat_{}_{}_points'.format(m.chat.id, str(i))) or '0'
-            if int(pts) > maxx:
-                maxx = int(pts)
-                maxi = i
-        r = recommender(maxi, cl1, cl2)
-        bot.send_message(m.chat.id,
-                         'Мы считаем, что вам наиболее всего подойдёт профессия {}. {} Желаем успехов!'.format(r,
-                                                                                                                describe(
-                                                                                                                    r)))
+            print(e)
     except Exception as e:
         print(e)
         print(m.text)

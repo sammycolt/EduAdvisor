@@ -209,7 +209,11 @@ def send_welcome(message: telebot.types.Message):
 
 def get_user_data(m: telebot.types.Message):
     try:
-        dicter = get_info_by_url(m.text)
+        try:
+            dicter = get_info_by_url(m.text)
+        except Exception as e:
+            msg = bot.send_message(m.chat.id, 'Ошибка при распознавании профиля VK. Попробуйте ещё раз')
+            bot.register_next_step_handler(msg, get_user_data)
         print(m.text)
         l = predict(dicter)
         cl1 = int(l[0])
@@ -247,7 +251,7 @@ def send_result(m: telebot.types.Message):
     # markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
     # markup.add(telebot.types.KeyboardButton('Осталось указать профиль vk'))
     nm = bot.send_message(m.chat.id,
-                          "Осталось указать профиль vk. Введи его")
+                          "Осталось указать профиль vk. Введи его (пришли ссылку на свою страницу)")
     bot.register_next_step_handler(nm, get_user_data)
 
 

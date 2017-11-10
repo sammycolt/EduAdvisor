@@ -252,6 +252,3 @@ def hook():
         return ''
     else:
         return abort(403)
-
-
-bot.polling(none_stop=True)

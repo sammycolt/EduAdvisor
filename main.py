@@ -11,7 +11,11 @@ from vk_info import *
 TOKEN = '498529639:AAH5JGrN1uQO3jJMjAyOvB8Y2hNq6QcIbT0'
 app = Flask(__name__)
 bot = telebot.TeleBot(TOKEN, threaded=False)
+WEBHOOK_URL_BASE = "https://glacial-retreat-80040.herokuapp.com"
+WEBHOOK_PATH = '/hook'
 r = redis.StrictRedis(host='localhost', port=6379, db=0)
+bot.remove_webhook()
+bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_PATH)
 
 
 def recommender(klimov, cl1, cl2):
@@ -233,14 +237,8 @@ def send_result(m: telebot.types.Message):
     bot.register_next_step_handler(nm, get_user_data)
 
 
-WEBHOOK_URL_BASE = "https://glacial-retreat-80040.herokuapp.com"
-WEBHOOK_PATH = '/hook'
-
-
 @app.route('/')
 def webhook():
-    bot.remove_webhook()
-    bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_PATH)
     return "Success"
 
 

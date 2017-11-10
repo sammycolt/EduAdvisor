@@ -8,7 +8,7 @@ from flask import Flask, request, abort
 from model import *
 from vk_info import *
 
-TOKEN = '498529639:AAFOt8w_u_7LquJWlyEiPUUfFdxL6R7AIIk'
+TOKEN = '498529639:AAH5JGrN1uQO3jJMjAyOvB8Y2hNq6QcIbT0'
 app = Flask(__name__)
 bot = telebot.TeleBot(TOKEN, threaded=False)
 r = redis.StrictRedis(host='localhost', port=6379, db=0)

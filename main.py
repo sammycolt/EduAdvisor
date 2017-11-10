@@ -8,18 +8,11 @@ from flask import Flask, request, abort
 from model import *
 from vk_info import *
 
-# WEBHOOK_URL_BASE = 'https://bot.shadowservants.ru'
 WEBHOOK_PATH = '/hook'
-
 TOKEN = '498529639:AAFOt8w_u_7LquJWlyEiPUUfFdxL6R7AIIk'
-
 app = Flask(__name__)
-
 bot = telebot.TeleBot(TOKEN, threaded=False)
-
 bot.remove_webhook()
-# bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_PATH, certificate=open('ssl/YOURPUBLIC.pem', 'r'))
-
 r = redis.StrictRedis(host='localhost', port=6379, db=0)
 
 
@@ -141,10 +134,6 @@ with open("klimov_questions.txt", "r") as kq:
         klimov_questions.append(KlimovTestQuestion().add_variant(v1).add_variant(v2))
 
 
-# klimov_questions = []
-
-
-
 class TestQuestions(object):
     def __init__(self, questions):
         self.st = RedisStorage(r)
@@ -226,7 +215,7 @@ def get_user_data(m: telebot.types.Message):
             r = recommender(maxi, cl1, cl2)
             bot.send_message(m.chat.id,
                              'Мы считаем, что вам наиболее всего подойдёт профессия {}. {} Желаем успехов!'
-                             .format(r,describe(r)))
+                             .format(r, describe(r)))
         except Exception as e:
             msg = bot.send_message(m.chat.id, 'Ошибка при распознавании профиля VK. Попробуйте ещё раз')
             bot.register_next_step_handler(msg, get_user_data)
@@ -238,21 +227,9 @@ def get_user_data(m: telebot.types.Message):
         print(m.text)
         bot.send_message(m.chat.id,
                          'Извините, произошла ошибка, попробуйте ещё раз чуть-позже. Разработчики уже в курсе. <3')
-        # markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
-        # markup.add(telebot.types.KeyboardButton('Отправить номер телефона', request_contact=True))
-        # nm = bot.send_message(m.chat.id,
-        #                       "Введи свои контактные данные и узнай результат! Нажми на кнопку или введите почту :)",
-        #                       reply_markup=markup)
-        # bot.register_next_step_handler(nm, send_result)
 
 
 def send_result(m: telebot.types.Message):
-    # for i in range(5):
-    #     pts = tq.st.get('chat_{}_{}_points'.format(m.chat.id, str(i))) or '0'
-    #     bot.send_message(m.chat.id, 'Вы набрали {} очков по категории {}'.format(pts, KlimovCategory(i).name))
-
-    # markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
-    # markup.add(telebot.types.KeyboardButton('Осталось указать профиль vk'))
     nm = bot.send_message(m.chat.id,
                           "Осталось указать профиль vk. Введи его (пришли ссылку на свою страницу)")
     bot.register_next_step_handler(nm, get_user_data)
@@ -274,4 +251,9 @@ def hook():
         return abort(403)
 
 
-bot.polling()
+bot.polling(none_stop=True)
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        exit()

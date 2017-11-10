@@ -1,2 +1,8 @@
 flask==0.12
 pyTelegramBotAPI
+redis
+scipy
+pandas
+numpy
+sklearn
+scikit-learn

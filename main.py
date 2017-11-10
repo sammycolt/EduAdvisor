@@ -1,4 +1,3 @@
-import json
 import re
 from enum import Enum, unique
 
@@ -246,13 +245,7 @@ def webhook():
 @app.route("/hook", methods=['POST'])
 def hook():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-    if request.headers.get('content-type') == 'application/json':
-        json_string = request.get_data().decode('utf-8')
-        update = telebot.types.Update.de_json(json_string)
-        bot.process_new_updates([update])
-        return ''
-    else:
-        return abort(403)
+    return "!", 200
 
 
 app.run(host="0.0.0.0", port=os.environ.get('PORT', 5000))

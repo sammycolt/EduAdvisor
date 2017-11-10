@@ -233,17 +233,18 @@ def send_result(m: telebot.types.Message):
     bot.register_next_step_handler(nm, get_user_data)
 
 
-WEBHOOK_PATH = "https://glacial-retreat-80040.herokuapp.com/bot"
+WEBHOOK_URL_BASE = "https://glacial-retreat-80040.herokuapp.com"
+WEBHOOK_PATH = '/hook'
 
 
 @app.route('/')
 def webhook():
     bot.remove_webhook()
-    bot.set_webhook(url=WEBHOOK_PATH)
-    return "!", 200
+    bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_PATH)
+    return "Success"
 
 
-@app.route("/bot", methods=['POST'])
+@app.route("/hook", methods=['POST'])
 def hook():
     if request.headers.get('content-type') == 'application/json':
         json_string = request.get_data().decode('utf-8')

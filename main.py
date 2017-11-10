@@ -8,11 +8,9 @@ from flask import Flask, request, abort
 from model import *
 from vk_info import *
 
-WEBHOOK_PATH = '/hook'
 TOKEN = '498529639:AAFOt8w_u_7LquJWlyEiPUUfFdxL6R7AIIk'
 app = Flask(__name__)
 bot = telebot.TeleBot(TOKEN, threaded=False)
-bot.remove_webhook()
 r = redis.StrictRedis(host='localhost', port=6379, db=0)
 
 
@@ -235,12 +233,17 @@ def send_result(m: telebot.types.Message):
     bot.register_next_step_handler(nm, get_user_data)
 
 
+WEBHOOK_PATH = "https://glacial-retreat-80040.herokuapp.com/bot"
+
+
 @app.route('/')
-def ind():
-    return 'lol'
+def webhook():
+    bot.remove_webhook()
+    bot.set_webhook(url=WEBHOOK_PATH)
+    return "!", 200
 
 
-@app.route(WEBHOOK_PATH, methods=['POST'])
+@app.route("/bot", methods=['POST'])
 def hook():
     if request.headers.get('content-type') == 'application/json':
         json_string = request.get_data().decode('utf-8')
@@ -252,8 +255,3 @@ def hook():
 
 
 bot.polling(none_stop=True)
-if __name__ == '__main__':
-    try:
-        main()
-    except KeyboardInterrupt:
-        exit()

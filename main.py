@@ -231,10 +231,12 @@ def send_result(m: telebot.types.Message):
     bot.register_next_step_handler(nm, get_vk_data)
 
 
+bot.remove_webhook()
+bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_PATH)
+
+
 @app.route('/')
 def webhook():
-    bot.remove_webhook()
-    bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_PATH)
     return "!", 200
 
 

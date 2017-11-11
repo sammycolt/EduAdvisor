@@ -5,7 +5,7 @@ from datetime import date, datetime
 
 import vk
 
-TOKEN1 = "ca96154776ec4e09b0944f5689c3291fd65e943cec050df3baab83a3057b9863ec6fd46dd5ddd2f48c7af"
+TOKEN1 = "a385d247a385d247a385d24780a3da82d0aa385a385d247fa78025d03522821f2efe304"
 
 A = 'vk.com'
 

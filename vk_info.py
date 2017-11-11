@@ -3,17 +3,18 @@ import time
 from multiprocessing import Process
 from datetime import date, datetime
 
+import requests
 import vk
-
-TOKEN1 = "a385d247a385d247a385d24780a3da82d0aa385a385d247fa78025d03522821f2efe304"
+import json
 
 A = 'vk.com'
 
+ask = 'https://api.vk.com/method/users.get?user_id={}&v=5.52'
+resolve = "https://api.vk.com/method/utils.resolveScreenName?screen_name={}&v=5.52"
 
-def get_info_by_url(url, token=TOKEN1):
+
+def get_info_by_url(url):
     global id
-    session = vk.Session(access_token=token)
-    vk_api = vk.API(session)
 
     if url[-1] == "/":
         url = url[:-1]
@@ -27,9 +28,10 @@ def get_info_by_url(url, token=TOKEN1):
             if 'id' == nick[:2] and nick[2:].isdigit():
                 id = nick[2:]
             else:
-                js = vk_api.utils.resolveScreenName(screen_name=nick)
+                js = requests.get(url=resolve.format(nick))
+                js = json.loads(js.text)
                 id = js["object_id"]
-    js = vk_api.users.get(user_ids=id)
+    js = requests.get(url=ask.format(id))
     if 'error' in js:
         return ValueError
     print("parsed id={}".format(id))
@@ -41,13 +43,10 @@ def calculate_age(born):
     return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
 
 
-def get_info(id, token=TOKEN1):
-    session = vk.Session(access_token=token)
-    vk_api = vk.API(session)
-    test_get = 1000
-
-    js = vk_api.users.get(user_ids=[id],
-                          fields="bdate, city,counters,country, followers_count, has_mobile, has_photo, personal,relation,schools,sex,trending,universities")
+def get_info(id):
+    requests.get(url=resolve.format(1))
+    # js = vk_api.users.get(user_ids=[id],
+    #                       fields="bdate, city,counters,country, followers_count, has_mobile, has_photo, personal,relation,schools,sex,trending,universities")
 
     counters_keys = ["photos", "videos", "audios", "albums", "notes", "friends", "groups", "user_videos",
                      "followers", "pages"]
@@ -63,7 +62,7 @@ def get_info(id, token=TOKEN1):
     for ke in simple_keys:
         dict_js[ke] = -1
 
-    dict_js.update(js[0])
+    # dict_js.update(js[0])
     dict_js["uid"] = id
 
     if "counters" in dict_js:
@@ -98,8 +97,8 @@ def get_info(id, token=TOKEN1):
 
     # print(dict_js)
 
-    js = vk_api.wall.get(owner_id=id, count=1)
-    dict_js['wall_posts'] = js[0]
+    # js = vk_api.wall.get(owner_id=id, count=1)
+    # dict_js['wall_posts'] = js[0]
 
     i = dict_js["bdate"]
     ages = []

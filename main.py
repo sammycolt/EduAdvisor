@@ -9,12 +9,12 @@ from flask import Flask, request, abort
 from model import *
 from vk_info import *
 
-TOKEN = '498529639:AAH5JGrN1uQO3jJMjAyOvB8Y2hNq6QcIbT0'
+TOKEN = '380269316:AAFGlQmz4voC1CrQyJe4aZaaKDEc1oVn4rc'
 app = Flask(__name__)
 bot = telebot.TeleBot(TOKEN, threaded=False)
 WEBHOOK_URL_BASE = "https://glacial-retreat-80040.herokuapp.com"
 WEBHOOK_PATH = '/hook'
-r = redis.StrictRedis(host='localhost', port=6379, db=0)
+r = redis.from_url(os.environ.get("REDIS_URL"))
 
 
 def recommender(klimov, cl1, cl2):
@@ -84,10 +84,6 @@ class SimpleFuckingStorage(object):
 ss = SimpleFuckingStorage()
 
 
-def check_email(text):
-    return re.match('[^@]+@[^@]+\.[^@]+', text) is not None
-
-
 @unique
 class KlimovCategory(Enum):
     HUMAN = 0
@@ -134,6 +130,8 @@ with open("klimov_questions.txt", "r") as kq:
         v2 = KlimovTestVariant(question[1], question[3])
         klimov_questions.append(KlimovTestQuestion().add_variant(v1).add_variant(v2))
 
+@bot.message_handler(func=lambda mess: 'Да!' == mess.text, content_types=['text'])
+def handle_acception(message):
 
 class TestQuestions(object):
     def __init__(self, questions):
@@ -196,7 +194,7 @@ def send_welcome(message: telebot.types.Message):
     bot.register_next_step_handler(m, tq.send_question_to_user)
 
 
-def get_user_data(m: telebot.types.Message):
+def get_vk_data(m: telebot.types.Message):
     global dicter
     try:
         try:
@@ -218,7 +216,7 @@ def get_user_data(m: telebot.types.Message):
                              .format(r, describe(r)))
         except Exception as e:
             msg = bot.send_message(m.chat.id, 'Ошибка при распознавании профиля VK. Попробуйте ещё раз')
-            bot.register_next_step_handler(msg, get_user_data)
+            bot.register_next_step_handler(msg, get_vk_data)
             print(e)
 
 
@@ -232,7 +230,7 @@ def get_user_data(m: telebot.types.Message):
 def send_result(m: telebot.types.Message):
     nm = bot.send_message(m.chat.id,
                           "Осталось указать профиль vk. Введи его (пришли ссылку на свою страницу)")
-    bot.register_next_step_handler(nm, get_user_data)
+    bot.register_next_step_handler(nm, get_vk_data)
 
 
 @app.route('/')

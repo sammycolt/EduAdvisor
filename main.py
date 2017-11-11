@@ -130,8 +130,6 @@ with open("klimov_questions.txt", "r") as kq:
         v2 = KlimovTestVariant(question[1], question[3])
         klimov_questions.append(KlimovTestQuestion().add_variant(v1).add_variant(v2))
 
-@bot.message_handler(func=lambda mess: 'Да!' == mess.text, content_types=['text'])
-def handle_acception(message):
 
 class TestQuestions(object):
     def __init__(self, questions):
@@ -247,3 +245,4 @@ def hook():
 
 
 app.run(host="0.0.0.0", port=os.environ.get('PORT', 5000))
+app = Flask(__name__)

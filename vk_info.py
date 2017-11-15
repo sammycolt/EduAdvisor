@@ -1,30 +1,40 @@
-from urllib.parse import urlparse
+import json
 import time
-from multiprocessing import Process
 from datetime import date, datetime
 
-import pandas as pd
-import vk
+import requests
 
-TOKEN1 = "ca96154776ec4e09b0944f5689c3291fd65e943cec050df3baab83a3057b9863ec6fd46dd5ddd2f48c7af"
+A = 'vk.com'
 
-def get_info_by_url(url, token=TOKEN1):
-    session = vk.Session(access_token=token)
-    vk_api = vk.API(session)
-    test_get = 1000
+ask = 'https://api.vk.com/method/users.get?user_id={}&v=5.52'
+resolve = "https://api.vk.com/method/utils.resolveScreenName?screen_name={}&v=5.52"
+big = "https://api.vk.com/method/users.get?user_id={}&v=5.52&fields=bdate, city,counters,country, followers_count, has_mobile, has_photo, personal,relation,schools,sex,trending,universities"
+wall = "https://api.vk.com/method/wall.get?owner_id={}&count=1&v=5.52&access_token={}"
+SERV_TOKEN="a385d247a385d247a385d24780a3da82d0aa385a385d247fa78025d03522821f2efe304"
 
-    # o = urlparse(url)
+def get_info_by_url(url):
+    global id
+
     if url[-1] == "/":
         url = url[:-1]
-    id = url.split("/")[-1]
+    url = url.lower()
+    print("URL: {}".format(url))
     try:
-        a = int(id)
-    except ValueError as e:
-        # print(id)
-        js = vk_api.utils.resolveScreenName(screen_name=id)
-        id = js["object_id"]
-
-    #print(id)
+        id = int(url)
+    except ValueError:
+        if A in url:
+            nick = url[url.index(A) + len(A) + 1:]
+            if 'id' == nick[:2] and nick[2:].isdigit():
+                id = nick[2:]
+            else:
+                js = requests.get(url=resolve.format(nick))
+                js = json.loads(js.text)
+                id = js["response"]["object_id"]
+    js = requests.get(url=ask.format(id))
+    js = json.loads(js.text)
+    if 'error' in js["response"]:
+        return ValueError
+    print("parsed id={}".format(id))
     return get_info(id)
 
 
@@ -33,18 +43,12 @@ def calculate_age(born):
     return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
 
 
-def get_info(id, token=TOKEN1):
-
-    session = vk.Session(access_token=token)
-    vk_api = vk.API(session)
-    test_get = 1000
-
-    js = vk_api.users.get(user_ids=[id],
-                                  fields="bdate, city,counters,country, followers_count, has_mobile, has_photo, personal,relation,schools,sex,trending,universities")
-
+def get_info(id):
+    js = requests.get(url=big.format(id))
+    js = json.loads(js.text)
     counters_keys = ["photos", "videos", "audios", "albums", "notes", "friends", "groups", "user_videos",
                      "followers", "pages"]
-    simple_keys = ["uid", "city", "country", "has_photo", "has_mobile", "trending", "followers_count", "sex",
+    simple_keys = ["uid", "has_photo", "has_mobile", "trending", "followers_count", "sex",
                    "relation", "universities", "schools", "political", "people_main", "life_main",
                    "smoking", "alcohol", "langs", "bdate", "wall_posts"]
 
@@ -55,8 +59,8 @@ def get_info(id, token=TOKEN1):
         dict_js[ke] = -1
     for ke in simple_keys:
         dict_js[ke] = -1
-
-    dict_js.update(js[0])
+    js = js["response"][0]
+    dict_js.update(js)
     dict_js["uid"] = id
 
     if "counters" in dict_js:
@@ -86,20 +90,18 @@ def get_info(id, token=TOKEN1):
 
     if 'relation_partner' in dict_js:
         dict_js.pop('relation_partner')
-
-    # dict_js["position"] = position
-
-    #print(dict_js)
-
-    js = vk_api.wall.get(owner_id=id, count=1)
-    dict_js['wall_posts'] = js[0]
-
-
+    if 'city' in js:
+        dict_js['city']=js['city']['id']
+    else:
+        dict_js['city']=-1
+    if 'country' in js:
+        dict_js['country']=js['country']['id']
+    else:
+        dict_js['country']=-1
 
     i = dict_js["bdate"]
     ages = []
-    
-    
+
     ag = 0
     if str(i) != "-1":
         l = i.split(".")
@@ -108,8 +110,16 @@ def get_info(id, token=TOKEN1):
             ag = calculate_age(d)
         else:
             ag = -1
-
     dict_js["age"] = ag
 
+    js = requests.get(url=wall.format(id,SERV_TOKEN))
+    js = json.loads(js.text)
+    if 'error' in js:
+        print(js)
+        dict_js['wall_posts']=-1
+    else:
+        js = js["response"]
+        dict_js['wall_posts'] = js['count']
 
     return dict_js
+

@@ -8,17 +8,17 @@ from flask import Flask, request, abort
 from model import *
 from vk_info import *
 
-# WEBHOOK_URL_BASE = 'https://bot.shadowservants.ru'
+WEBHOOK_URL_BASE = 'https://botsemen.shadowservants.ru'
 WEBHOOK_PATH = '/hook'
 
-TOKEN = '498529639:AAFOt8w_u_7LquJWlyEiPUUfFdxL6R7AIIk'
+TOKEN = '498529639:AAH5JGrN1uQO3jJMjAyOvB8Y2hNq6QcIbT0'
 
 app = Flask(__name__)
 
 bot = telebot.TeleBot(TOKEN, threaded=False)
 
 bot.remove_webhook()
-# bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_PATH, certificate=open('ssl/YOURPUBLIC.pem', 'r'))
+bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_PATH, certificate=open('ssl/YOURPUBLIC.pem', 'r'))
 
 r = redis.StrictRedis(host='localhost', port=6379, db=0)
 
@@ -141,7 +141,7 @@ with open("klimov_questions.txt", "r") as kq:
         klimov_questions.append(KlimovTestQuestion().add_variant(v1).add_variant(v2))
 
 
-# klimov_questions = []
+#klimov_questions = []
 
 
 
@@ -208,13 +208,17 @@ def send_welcome(message: telebot.types.Message):
 
 
 def get_user_data(m: telebot.types.Message):
+    flag = False
     try:
+        dicter = {}
         try:
             dicter = get_info_by_url(m.text)
         except Exception as e:
             msg = bot.send_message(m.chat.id, 'Ошибка при распознавании профиля VK. Попробуйте ещё раз')
+            flag = True
             bot.register_next_step_handler(msg, get_user_data)
-        print(m.text)
+            print("RASP" + m.text)
+        print("OK")
         l = predict(dicter)
         cl1 = int(l[0])
         cl2 = int(l[1])
@@ -233,7 +237,8 @@ def get_user_data(m: telebot.types.Message):
     except Exception as e:
         print(e)
         print(m.text)
-        bot.send_message(m.chat.id,
+        if flag == False:
+            bot.send_message(m.chat.id,
                          'Извините, произошла ошибка, попробуйте ещё раз чуть-позже. Разработчики уже в курсе. <3')
         # markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
         # markup.add(telebot.types.KeyboardButton('Отправить номер телефона', request_contact=True))
@@ -271,4 +276,5 @@ def hook():
         return abort(403)
 
 
-bot.polling()
+#bot.polling(none_stop=True)
+

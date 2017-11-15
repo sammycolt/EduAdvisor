@@ -15,26 +15,31 @@ SERV_TOKEN="a385d247a385d247a385d24780a3da82d0aa385a385d247fa78025d03522821f2efe
 def get_info_by_url(url):
     global id
 
-    if url[-1] == "/":
-        url = url[:-1]
     url = url.lower()
+
+    while url[-1] == "/":
+        url = url[:-1]
+
     print("URL: {}".format(url))
-    try:
-        id = int(url)
-    except ValueError:
-        if A in url:
-            nick = url[url.index(A) + len(A) + 1:]
-            if 'id' == nick[:2] and nick[2:].isdigit():
-                id = nick[2:]
-            else:
-                js = requests.get(url=resolve.format(nick))
-                js = json.loads(js.text)
-                id = js["response"]["object_id"]
+    if A in url and len(url)>len(A):
+        nick = url[url.index(A) + len(A) + 1:]
+        if 'id' == nick[:2] and nick[2:].isdigit():
+            id = nick[2:]
+        else:
+            js = requests.get(url=resolve.format(nick))
+            js = json.loads(js.text)
+            id = js["response"]["object_id"]
+    else:
+        return ValueError
+
     js = requests.get(url=ask.format(id))
     js = json.loads(js.text)
+
     if 'error' in js["response"]:
         return ValueError
+
     print("parsed id={}".format(id))
+
     return get_info(id)
 
 
@@ -122,4 +127,3 @@ def get_info(id):
         dict_js['wall_posts'] = js['count']
 
     return dict_js
-

@@ -8,8 +8,8 @@ from flask import Flask, request, abort
 from model import *
 from vk_info import *
 
-WEBHOOK_URL_BASE = 'https://botsemen.shadowservants.ru'
-WEBHOOK_PATH = '/hook'
+# WEBHOOK_URL_BASE = 'https://botsemen.shadowservants.ru'
+# WEBHOOK_PATH = '/hook'
 
 TOKEN = '498529639:AAH5JGrN1uQO3jJMjAyOvB8Y2hNq6QcIbT0'
 
@@ -17,8 +17,8 @@ app = Flask(__name__)
 
 bot = telebot.TeleBot(TOKEN, threaded=False)
 
-bot.remove_webhook()
-bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_PATH, certificate=open('ssl/YOURPUBLIC.pem', 'r'))
+# bot.remove_webhook()
+# bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_PATH, certificate=open('ssl/YOURPUBLIC.pem', 'r'))
 
 r = redis.StrictRedis(host='localhost', port=6379, db=0)
 
@@ -276,5 +276,5 @@ def hook():
         return abort(403)
 
 
-#bot.polling(none_stop=True)
+bot.polling(none_stop=True)
 
